@@ -12,7 +12,6 @@ if(MSVC)
         /utf-8
         /permissive-
     )
-    # Disable some warnings that DPP triggers
     add_compile_definitions(_CRT_SECURE_NO_WARNINGS WIN32_LEAN_AND_MEAN)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     add_compile_options(
@@ -23,26 +22,32 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     )
 endif()
 
-# Try to use vcpkg if available (Windows)
+# ============================================================
+# vcpkg Integration
+# ============================================================
 if(WIN32)
-    # Check for vcpkg integration
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg.json")
-        set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain")
-        message(STATUS "Using vcpkg toolchain: $ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+    # Use vcpkg if available
+    if(DEFINED ENV{VCPKG_ROOT} AND EXISTS "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+        set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE FILEPATH "Vcpkg toolchain")
+        message(STATUS "Using vcpkg toolchain from: $ENV{VCPKG_ROOT}")
+    elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg.json")
+        # Try default vcpkg location
+        set(CMAKE_TOOLCHAIN_FILE "C:/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE FILEPATH "Vcpkg toolchain")
+        message(STATUS "Using default vcpkg toolchain")
     endif()
     
-    # Try to find packages via vcpkg first
-    find_package(opus CONFIG)
-    find_package(OpenSSL CONFIG)
-    find_package(ZLIB CONFIG)
-    find_package(dpp CONFIG)
+    find_package(opus CONFIG REQUIRED)
+    find_package(OpenSSL CONFIG REQUIRED)
+    find_package(ZLIB CONFIG REQUIRED)
+    find_package(nlohmann_json CONFIG REQUIRED)
+    find_package(dpp CONFIG REQUIRED)
 else()
     # Linux/Unix - use pkg-config
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(OPUS REQUIRED opus)
     pkg_check_modules(OPUSFILE REQUIRED opusfile)
     
-    # DPP library - FetchContent for simplicity on Linux
+    # DPP library via FetchContent
     include(FetchContent)
     FetchContent_Declare(
         dpp
@@ -53,10 +58,12 @@ else()
     FetchContent_MakeAvailable(dpp)
 endif()
 
-# Threads (always needed)
+# Threads
 find_package(Threads REQUIRED)
 
-# Create executable
+# ============================================================
+# Executable
+# ============================================================
 add_executable(discord_voice_receive
     src/main.cpp
     src/wav_writer.cpp
@@ -65,45 +72,25 @@ add_executable(discord_voice_receive
     src/stats.cpp
 )
 
-# Include directories
 target_include_directories(discord_voice_receive PRIVATE
     ${CMAKE_SOURCE_DIR}/include
 )
 
-# Platform-specific includes
-if(WIN32)
-    if(TARGET opus::opus)
-        target_include_directories(discord_voice_receive PRIVATE ${opus_INCLUDE_DIRS})
-    endif()
-    if(TARGET OpenSSL::SSL)
-        target_include_directories(discord_voice_receive PRIVATE ${OPENSSL_INCLUDE_DIR})
-    endif()
-else()
-    target_include_directories(discord_voice_receive PRIVATE
-        ${OPUS_INCLUDE_DIRS}
-        ${OPUSFILE_INCLUDE_DIRS}
-    )
-endif()
-
-# Link libraries
+# ============================================================
+# Link Libraries
+# ============================================================
 target_link_libraries(discord_voice_receive PRIVATE
     Threads::Threads
 )
 
-# Platform-specific link libraries
 if(WIN32)
-    if(TARGET dpp::dpp)
-        target_link_libraries(discord_voice_receive PRIVATE dpp::dpp)
-    endif()
-    if(TARGET opus::opus)
-        target_link_libraries(discord_voice_receive PRIVATE opus::opus)
-    endif()
-    if(TARGET OpenSSL::SSL)
-        target_link_libraries(discord_voice_receive PRIVATE OpenSSL::SSL OpenSSL::Crypto)
-    endif()
-    if(TARGET ZLIB::ZLIB)
-        target_link_libraries(discord_voice_receive PRIVATE ZLIB::ZLIB)
-    endif()
+    target_link_libraries(discord_voice_receive PRIVATE
+        dpp::dpp
+        opus::opus
+        OpenSSL::SSL
+        OpenSSL::Crypto
+        ZLIB::ZLIB
+    )
 else()
     target_link_libraries(discord_voice_receive PRIVATE
         dpp
@@ -112,19 +99,9 @@ else()
     )
 endif()
 
-# Install target
-install(TARGETS discord_voice_receive DESTINATION bin)
-
-# Create directories for build
+# Create output directories
 file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/recordings)
 file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/logs)
 
-# Print configuration info
-message(STATUS "===========================================")
-message(STATUS "Discord Voice Receive - Build Configuration")
-message(STATUS "===========================================")
-message(STATUS "Compiler: ${CMAKE_CXX_COMPILER}")
-message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
-message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
-message(STATUS "Platform: ${CMAKE_SYSTEM_NAME}")
-message(STATUS "===========================================")
+# Install target
+install(TARGETS discord_voice_receive DESTINATION bin)

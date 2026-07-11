@@ -12,6 +12,12 @@ A standalone C++ prototype using the DPP (D++) library that validates reliable D
 - **Logging**: Comprehensive logging with timestamps and severity levels
 - **Performance Statistics**: Tracks packets, bytes, decodes, and recording duration
 
+## IDE Support
+
+- **CLion**: See [README_CLION.md](README_CLION.md) for CLion-specific setup
+- **Visual Studio**: Use the CMake integration with vcpkg
+- **VS Code**: Use the CMake Tools extension
+
 ## Requirements
 
 ### System Dependencies
