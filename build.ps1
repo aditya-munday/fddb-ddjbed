@@ -64,7 +64,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host ""
-Write-Host "Building..." -ForegroundColor Cyan
+Write-Host "Building Release..." -ForegroundColor Cyan
 cmake --build . --config Release --parallel
 
 if ($LASTEXITCODE -ne 0) {
@@ -73,6 +73,10 @@ if ($LASTEXITCODE -ne 0) {
     Pop-Location
     exit 1
 }
+
+# Don't build debug to save time
+Write-Host ""
+Write-Host "Skipping Debug build (only Release built)" -ForegroundColor Yellow
 
 Pop-Location
 
