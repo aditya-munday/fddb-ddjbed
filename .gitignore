@@ -1,0 +1,21 @@
+# Build outputs
+build/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Recordings and logs
+recordings/*.wav
+logs/*.log
+*.wav
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+  "name": "discord-voice-receive",
+  "version": "1.0.0",
+  "description": "Discord Voice Receive Prototype using DPP",
+  "homepage": "https://github.com/example/discord-voice-receive",
+  "dependencies": [
+    "dpp",
+    "opus",
+    "openssl",
+    "zlib"
+  ]
+}
