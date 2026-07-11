@@ -26,21 +26,22 @@ endif()
 # vcpkg Integration
 # ============================================================
 if(WIN32)
-    # Use vcpkg if available
-    if(DEFINED ENV{VCPKG_ROOT} AND EXISTS "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
-        set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE FILEPATH "Vcpkg toolchain")
-        message(STATUS "Using vcpkg toolchain from: $ENV{VCPKG_ROOT}")
-    elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg.json")
-        # Try default vcpkg location
-        set(CMAKE_TOOLCHAIN_FILE "C:/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE FILEPATH "Vcpkg toolchain")
-        message(STATUS "Using default vcpkg toolchain")
+    # Find vcpkg toolchain file
+    if(DEFINED ENV{VCPKG_ROOT})
+        file(TO_CMAKE_PATH "$ENV{VCPKG_ROOT}" VCPKG_ROOT_PATH)
+        set(TOOLCHAIN_FILE "${VCPKG_ROOT_PATH}/scripts/buildsystems/vcpkg.cmake")
+        if(EXISTS "${TOOLCHAIN_FILE}")
+            set(CMAKE_TOOLCHAIN_FILE "${TOOLCHAIN_FILE}" CACHE FILEPATH "Vcpkg toolchain")
+            message(STATUS "Using vcpkg toolchain from: ${TOOLCHAIN_FILE}")
+        endif()
     endif()
     
-    find_package(opus CONFIG REQUIRED)
-    find_package(OpenSSL CONFIG REQUIRED)
-    find_package(ZLIB CONFIG REQUIRED)
-    find_package(nlohmann_json CONFIG REQUIRED)
-    find_package(dpp CONFIG REQUIRED)
+    # vcpkg packages
+    find_package(opus CONFIG)
+    find_package(OpenSSL CONFIG)
+    find_package(ZLIB CONFIG)
+    find_package(nlohmann_json CONFIG)
+    find_package(dpp CONFIG)
 else()
     # Linux/Unix - use pkg-config
     find_package(PkgConfig REQUIRED)
@@ -84,13 +85,18 @@ target_link_libraries(discord_voice_receive PRIVATE
 )
 
 if(WIN32)
-    target_link_libraries(discord_voice_receive PRIVATE
-        dpp::dpp
-        opus::opus
-        OpenSSL::SSL
-        OpenSSL::Crypto
-        ZLIB::ZLIB
-    )
+    if(TARGET dpp::dpp)
+        target_link_libraries(discord_voice_receive PRIVATE dpp::dpp)
+    endif()
+    if(TARGET opus::opus)
+        target_link_libraries(discord_voice_receive PRIVATE opus::opus)
+    endif()
+    if(TARGET OpenSSL::SSL)
+        target_link_libraries(discord_voice_receive PRIVATE OpenSSL::SSL OpenSSL::Crypto)
+    endif()
+    if(TARGET ZLIB::ZLIB)
+        target_link_libraries(discord_voice_receive PRIVATE ZLIB::ZLIB)
+    endif()
 else()
     target_link_libraries(discord_voice_receive PRIVATE
         dpp
