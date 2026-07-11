@@ -1,0 +1,8 @@
+# Copy this file to CMakeLists.txt.user and customize for your system
+# This file is ignored by git
+
+# Example: Set vcpkg toolchain
+# -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+
+# Example: Set build type
+# -DCMAKE_BUILD_TYPE=Release
