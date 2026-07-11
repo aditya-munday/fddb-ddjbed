@@ -26,7 +26,7 @@ endif()
 # Try to use vcpkg if available (Windows)
 if(WIN32)
     # Check for vcpkg integration
-    if EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg.json"
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg.json")
         set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain")
         message(STATUS "Using vcpkg toolchain: $ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
     endif()
